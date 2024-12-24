@@ -18,82 +18,75 @@ cover:
     rx_pin: 16
 ```
 
-Доступен перевод на английский
 [English](https://github.com/xdanik/Nice_BusT4)
 
+# ESPHome Component for Controlling Nice Actuators via the Bus T4 Protocol
 
-# ESPHOME компонент для управления приводами Nice по протоколу Bus T4
-# Nice Bus T4 protocol
+I became interested in understanding the protocol for controlling Nice gates.  
+The goal: inexpensive devices based on the ESP8266 for integration with a smart home.
 
-Появилось желание разобраться в протоколе для управления воротами Nice.
-Переспектива - дешёвые устройства на базе esp8266 для управлением из умного дома.
+Modern actuator control units feature a Bus T4 connector with GND, +V, Can-Rx, and Can-Tx pins. The voltage (V) can vary between 24 and 35 volts depending on the control unit.
 
-Современные блоки управления приводами имеют разъем BusT4, на который выведены GND, +V, Can-Rx, Can-Tx. Величина напряжения V может варьироваться от 24 до 35 вольт для разных блоков управления.
+## Current Capabilities of the Component
 
-# Текущие возможности компонента
-* Отправка команд: "Открыть", "Стоп", "Закрыть", "Частичное открытие", "Пошагово (SBS)" и других через кнопки.
-* Отправка произвольных HEX команд через службу "raw_command". Команда должна быть сформирована заранее или где-то подсмотрена. Разделителями байт могут быть точки или пробелы. Пример: 55 0c 00 03 00 81 01 05 86 01 82 01 64 e6 0c или 55.0D.00.FF.00.66.08.06.97.00.04.99.00.00.9D.0D
-* Формирование и отправка произвольных GET/SET запросов через службу "send_inf_command". Позволяет произвести настройку устройства или получить его статусы.
-* Отображение в логе пакетов от всех устройств в сети busT4.
+- Sending commands such as "Open," "Stop," "Close," "Partial Open," "Step-by-Step (SBS)," and others via buttons.
+- Sending arbitrary HEX commands through the `raw_command` service. Commands need to be prepared in advance or found elsewhere. Byte delimiters can be dots or spaces.  
+  Example:  
+  `55 0c 00 03 00 81 01 05 86 01 82 01 64 e6 0c` or `55.0D.00.FF.00.66.08.06.97.00.04.99.00.00.9D.0D`.
+- Generating and sending custom GET/SET requests through the `send_inf_command` service, allowing you to configure the device or retrieve its status.
+- Logging packets from all devices on the Bus T4 network.
 
-# BusT4:
+## Bus T4 Protocol
 
-Это измененный UART 19200 8n1 с uart.break длительностью 519us-590us перед каждым пакетом.
-Можно подключать несколько устройств, для этого в физический уровень добавлены трансиверы CAN-BUS.
-Физическая передача чаще происходит через CAN трансиверы, но CAN-фреймов нет.
+This is a modified UART (19200 8n1) with a `uart.break` duration of 519–590 µs before each packet.  
+Multiple devices can be connected, as CAN-BUS transceivers are added at the physical level.  
+Transmission often occurs through CAN transceivers, but no CAN frames are present.
 
-# Что сделано:
-* Подключил FTDI232 к GND, Can-Rx, Can-Tx. Пакеты видны и поддаются расшифровке.
-* Логическим анализатором увидел форму сигнала и состав посылок, подобрал параметры uart.
-* Успешно имитировал считанный пакет через Arduino Mega, привод реагирует.
-* Получил команды OPEN CLOSE и тд
-* Получил байт статуса привода
-* Считал основные команды, частично расшифровал значение байт.
-* Собрал прототип устройства, протестировал работу.
-* Собрал сниффер для отлова пакетов между OVIEW и устройствами busT4
-* Написал компонент, который имеет возможность управлять приводами и приёмниками по протоколу BusT4
-* Проверил работу на Wingo5000 c блоком [MCA5](img/IMG_20220113_160221.jpg), [Robus RB500HS](img/3hs.jpg), Soona SO2000, [Rd400](img/rba4.jpg), [D-PRO924](img/924.jpg), [Walky WL1024C](img/walky.jpg), [SPIN 22BDKCE](img/spin.jpg).
+## Accomplishments
 
-![alt text](img/Schematic_esphome_bust4_adapter.png "Схема адаптера bus-t4")
+- Connected an FTDI232 to GND, Can-Rx, and Can-Tx. Packets are visible and can be decoded.
+- Observed signal shape and packet composition using a logic analyzer, adjusted UART parameters.
+- Successfully emulated a captured packet using Arduino Mega; the actuator responds.
+- Captured commands for OPEN, CLOSE, etc.
+- Retrieved the actuator status byte.
+- Decoded basic commands, partially interpreted byte values.
+- Built a prototype device and tested functionality.
+- Built a sniffer to capture packets between OVIEW and Bus T4 devices.
+- Created a component capable of controlling actuators and receivers via the Bus T4 protocol.
+- Tested functionality with Wingo5000 using the [MCA5](img/IMG_20220113_160221.jpg) unit, [Robus RB500HS](img/3hs.jpg), Soona SO2000, [Rd400](img/rba4.jpg), [D-PRO924](img/924.jpg), [Walky WL1024C](img/walky.jpg), and [SPIN 22BDKCE](img/spin.jpg).
 
+![Schematic of the Bus T4 adapter](img/Schematic_esphome_bust4_adapter.png)
 
-ESP8266 не совпадает по уровню сигнала с BUS T4, добавить преобразователь уровней 3.3В -> 5В для Tx на транзисторе.
-Rx ESP толерантен к 5В, но для стабильной работы нужен диод. У меня работает со случайным германиевым, возможно и кремниевый подойдёт.
+The ESP8266 signal level does not match Bus T4, so a 3.3V → 5V level shifter for Tx using a transistor is needed.  
+The ESP's Rx pin tolerates 5V, but a diode is required for stability. Mine works with a random germanium diode; silicon might also work.
 
-В дальнейшем схема была модифицирована.
-![alt text](img/Schematic_busT4adapter_xl.png "Схема адаптера  bus-t4 с модифицированным блоком питания")
-![alt text](img/IMG20230306201230.png "Готовое устройство 2.0")
+Later, the schematic was modified.  
+![Schematic of the modified Bus T4 adapter](img/Schematic_busT4adapter_xl.png)  
+![Completed device 2.0](img/IMG20230306201230.png)
 
-![alt text](img/hassio-bust4.png "Тест работы компонента bus-t4")
+![Component test for Bus T4](img/hassio-bust4.png)
 
+For Walky actuators, a CAN transceiver is required. The Bus T4 port is hidden under a cover. This same schematic is suitable for other units with an exposed RJ-11 (6P4C) port, e.g., [mc824h](img/mc824h.jpg) or [RBA3/C](img/rba3c.jpg).  
+![Schematic with CAN + Bus T4](img/Schematic_bust4_2023-10-18.png)
 
-Для приводов Walky нужна схема с CAN-трансивером. Разъем Bus-T4 спрятан под заглушкой. Эта же схема подойдет и к другим блокам управления с выведенным rj-11 (6p4c) разъемом, например [mc824h](img/mc824h.jpg) или [RBA3/C](img/rba3c.jpg)
-![alt text](img/Schematic_bust4_2023-10-18.png "Схема CAN + bus-t4")
-
-Компонент поддерживает отправку произвольной команды на привод через службу  ESPHome: nice_bust4_uart_raw_command в Home assystant.
-```
-SBS:   55 0c 00 03 00 81 01 05 86 01 82 01 64 e6 0c
-Open:  55 0c 00 03 05 81 01 05 83 01 82 03 64 e4 0c
+The component supports sending arbitrary commands to the actuator via the ESPHome service: `nice_bust4_uart_raw_command` in Home Assistant.  
+SBS: 55 0c 00 03 00 81 01 05 86 01 82 01 64 e6 0c
+Open: 55 0c 00 03 05 81 01 05 83 01 82 03 64 e4 0c
 Close: 55 0c 00 03 05 81 01 05 83 01 82 04 64 e3 0c
-Stop:  55 0c 00 03 00 81 01 05 86 01 82 02 64 e5 0c
-```
+Stop: 55 0c 00 03 00 81 01 05 86 01 82 02 64 e5 0c
 
+When the ESP starts and runs, it queries devices connected to the Bus T4 network and outputs information about them in the log.  
+![Log example](img/log.png)  
+![Log example 2](img/log2.png)
 
-При старте и работе ESP опрашивает подключенные к шине BusT4 устройства и выводит информацию о них в лог. 
-![log](img/log.png "Лог")
-![log](img/log2.png "Лог2")
+## Updates
 
-# Обновления
-* Добавлены службы в интерфейс компонента для более простого запуска процедуры распознавания длины створки и процедуры распознавания устройств BlueBus не разбирая корпус привода (и даже находясь удалённо).
-* Добавлен вывод в лог конфигурации считанные из устройства состояния L1, L2, L3 (Автоматическое
-закрывание, Закрыть после
-фотоэлемента, Всегда закрывать)
-* Улучшена совместимость с приводами DPRO924
-* Кнопка СТОП всегда доступна в User Interface объекта
-* Улучшена совместимость с приводами Walky WL1024C
-* Улучшена совместимость с приводами Spin ([@TheGoblinHero](https://github.com/TheGoblinHero))
-* Добавлена функция задания произвольного положения привода ([@TheGoblinHero](https://github.com/TheGoblinHero))
+- Added services to the component interface for easier execution of leaf length recognition and BlueBus device recognition procedures without opening the actuator housing (even remotely).
+- Added log output for configuration states (L1, L2, L3: Automatic Closing, Close after Photocell, Always Close).
+- Improved compatibility with DPRO924 actuators.
+- STOP button is always available in the User Interface object.
+- Enhanced compatibility with Walky WL1024C actuators.
+- Improved compatibility with Spin actuators ([@TheGoblinHero](https://github.com/TheGoblinHero)).
+- Added functionality to set arbitrary actuator positions ([@TheGoblinHero](https://github.com/TheGoblinHero)).
 
-Если проект заинтересовал, вы можете [купить мне пиво или кофе](https://www.tinkoff.ru/cf/12xvN3UtJkO)
-
-
+If you find this project interesting, you can [buy me a beer or coffee](https://www.tinkoff.ru/cf/12xvN3UtJkO).
