@@ -1,0 +1,89 @@
+esphome:
+  name: gates
+  friendly_name: Gates
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API with encryption
+api:
+  encryption:
+    key: "<insert encryption key>"
+
+# Enable OTA updates with the platform specified
+ota:
+  - platform: esphome
+    password: "<insert password>"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Gates Fallback Hotspot"
+    password: "<insert password>"
+
+captive_portal:
+
+# Use the makstech Nice_BusT4 external component
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ngem1/Nice_BusT4
+
+cover:
+  - platform: bus_t4
+    name: "Nice Cover"
+    device_class: gate
+    id: nice_cover
+    uart_num: "UART_NUM_1"  # Use UART1
+    tx_pin: 17  # Replace with the actual TX pin you are using
+    rx_pin: 16  # Replace with the actual RX pin you are using
+
+button:
+  - platform: template
+    name: "Step-by-Step"
+    id: sbs
+    on_press:
+      lambda: |-
+        nice_cover->send_cmd(bus_t4::SBS);
+
+  - platform: template
+    name: "Input Status"
+    id: in_stat
+    on_press:
+      lambda: |-
+        nice_cover->send_raw_cmd("55.0D.00.03.00.66.08.06.6B.04.D0.99.00.00.4D.0D");
+
+  - platform: template
+    name: "Pedestrian Gate"
+    id: p_opn1
+    on_press:
+      lambda: |-
+        nice_cover->send_cmd(bus_t4::P_OPN1);
+
+switch:
+  - platform: template
+    name: "Auto-Close"
+    id: autoclose
+    restore_mode: DISABLED
+    lambda: |-
+      return nice_cover->autocls_flag;
+    turn_on_action:
+      lambda: |-
+        nice_cover->send_inf_cmd("0003", "04", "80", "a9", "00", true, "01");
+        nice_cover->send_inf_cmd("0003", "04", "84", "a9", "00", true, "01");
+        nice_cover->send_inf_cmd("0003", "04", "80", "99", "00", true, "01");
+        nice_cover->send_inf_cmd("0003", "04", "84", "99", "00", true, "01");
+    turn_off_action:
+      lambda: |-
+        nice_cover->send_inf_cmd("0003", "04", "80", "a9", "00", true, "00");
+        nice_cover->send_inf_cmd("0003", "04", "84", "a9", "00", true, "00");
+        nice_cover->send_inf_cmd("0003", "04", "80", "99", "00", true, "00");
+        nice_cover->send_inf_cmd("0003", "04", "84", "99", "00", true, "00");
