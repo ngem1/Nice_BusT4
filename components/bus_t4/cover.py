@@ -55,7 +55,7 @@ CONFIG_SCHEMA = (
         }
             )
             .extend(cv.COMPONENT_SCHEMA)
-
+)
 
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -75,4 +75,5 @@ def to_code(config):
  #   if CONF_UPDATE_INTERVAL in config:
  #       update_interval = config[CONF_UPDATE_INTERVAL]
  #       cg.add(var.set_update_interval(update_interval))
+
 
