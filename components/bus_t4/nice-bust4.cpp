@@ -660,7 +660,7 @@ void NiceBusT4::parse_status_packet (const std::vector<uint8_t> &data) {
          break;
        case OPENED:
          this->position = COVER_OPEN;
-         ESP_LOGD(TAG, Status: Open");
+         ESP_LOGD(TAG, "Status: Open");
          this->current_operation = COVER_OPERATION_IDLE;
          break;
 
