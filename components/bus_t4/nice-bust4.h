@@ -181,8 +181,8 @@ enum command_pkt  : uint8_t {
   OUT1           = 0x51,  /* Setting up outputs */
   OUT2           = 0x52,  /* Setting up outputs */
   LOCK_TIME      = 0x5A,  /* Output settings - Lock operating time */
-  S_CUP_TIME     = 0x5C,  /* Output Settings - Suction Cup Time*
-  LAMP_TIME      = 0x5B,  /* Output settings - Courtesy light Time*
+  S_CUP_TIME     = 0x5C,  /* Output Settings - Suction Cup Time */
+  LAMP_TIME      = 0x5B,  /* Output settings - Courtesy light Time */
   COMM_SBS       = 0x61,  /* Setting up commands - Step by step */
   COMM_POPN      = 0x62,  /* Setting up commands - Partial Open */ 	  
   COMM_OPN       = 0x63,  /* Setting up commands - Open */	  	  	  
